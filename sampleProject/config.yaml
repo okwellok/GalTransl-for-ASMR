@@ -25,9 +25,9 @@ plugin:
     - (project_dir)text_common_example # 示例，(project_dir)代表插件在项目的plugins目录里
 # 代理设置
 proxy:
-  enableProxy: false # 是否启用代理。[True/False]
+  enableProxy: true
   proxies:
-    - address: http://127.0.0.1:7890
+    - address: http://127.0.0.1:10809
 # 字典设置
 dictionary:
   defaultDictFolder: Dict # 通用字典文件夹，相对于程序目录，也可填入绝对路径

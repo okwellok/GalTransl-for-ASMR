@@ -48,13 +48,17 @@ def worker(input_file, yt_url, model_size, translator, gpt_token, sakura_address
     if yt_url and ('youtu.be' in yt_url or 'youtube.com' in yt_url):
         from yt_dlp import YoutubeDL
         import os
-        if os.path.exists('sampleProject/YoutubeDL.webm'):
-            os.remove('sampleProject/YoutubeDL.webm')
-        with YoutubeDL({'proxy': proxy_address,'outtmpl': 'sampleProject/YoutubeDL.webm'}) as ydl:
+        if os.path.exists('sampleProject/YoutubeDL.mp3'):
+            os.remove('sampleProject/YoutubeDL.mp3')
+        with YoutubeDL({'format': 'bestaudio/best','postprocessors': [{
+        'key': 'FFmpegExtractAudio',
+        'preferredcodec': 'mp3',
+        'preferredquality': '192',
+    }],'proxy': proxy_address,'outtmpl': 'sampleProject/YoutubeDL'}) as ydl:
             print("正在下载视频...")
             results = ydl.download([yt_url])
             print("视频下载完成！")
-        input_file = 'sampleProject/YoutubeDL.webm'
+        input_file = 'sampleProject/YoutubeDL.mp3'
 
     elif yt_url and 'BV' in yt_url:
         from bilibili_dl.bilibili_dl.Video import Video
@@ -107,7 +111,7 @@ def worker(input_file, yt_url, model_size, translator, gpt_token, sakura_address
                 output_folder = 'sampleProject/gt_input',
                 model_size    = model_size,
                 language      = 'ja',
-                precision     = 'float16',
+                precision     = 'float32',
             )
             print("语音识别完成！")
 
@@ -172,8 +176,8 @@ def worker(input_file, yt_url, model_size, translator, gpt_token, sakura_address
 
         print("正在生成字幕文件...")
         from prompt2srt import make_srt, make_lrc
-        make_srt(output_file_path.replace('gt_input','gt_output'), input_file+'.srt')
-        make_lrc(output_file_path.replace('gt_input','gt_output'), input_file+'.lrc')
+        make_srt(output_file_path.replace('gt_input','gt_output'), input_file+'.sc.srt')
+        # make_lrc(output_file_path.replace('gt_input','gt_output'), input_file+'.lrc')
         make_srt(output_file_path, input_file+'.jp.srt')
         print("字幕文件生成完成！")
         print("缓存地址为：", input_file)
@@ -200,7 +204,7 @@ with gr.Blocks() as demo:
     model_size = gr.Radio(
         label="2. 请选择语音识别模型大小:",
         choices=['small', 'medium', 'large-v3',],
-        value='small'
+        value='large-v3'
     )
     translator = gr.Radio(
         label="3. 请选择翻译器：",
@@ -209,7 +213,7 @@ with gr.Blocks() as demo:
     )
     gpt_token = gr.Textbox(label="4. 请输入 API Token (GPT, Moonshot, Qwen, GLM, MiniMax/abab)", placeholder="留空为使用上次配置的Token")
     sakura_address = gr.Textbox(label="6. 请输入 API 地址 (Sakura, Index, Galtransl)", placeholder="例如：http://127.0.0.1:8080，留空为使用上次配置的地址")
-    proxy_address = gr.Textbox(label="7. 请输入翻译引擎和视频下载代理地址", placeholder="例如：http://127.0.0.1:7890，留空为不使用代理")
+    proxy_address = gr.Textbox(label="7. 请输入翻译引擎和视频下载代理地址", placeholder="例如：http://127.0.0.1:7890，留空为不使用代理", value="http://127.0.0.1:10809")
     with gr.Accordion("8. 使用翻译字典（可选）", open=False):
         with gr.Row():
             before_dict = gr.Textbox(label="输入替换字典（日文到日文）", placeholder="日文\t日文\n日文\t日文")
@@ -223,4 +227,5 @@ with gr.Blocks() as demo:
     run.click(worker, inputs=[input_file, yt_url, model_size, translator, gpt_token, sakura_address, proxy_address, before_dict, gpt_dict, after_dict], queue=True)
     clean.click(cleaner, inputs=[])
 
-demo.queue().launch(inbrowser=True, server_name='0.0.0.0')
+os.environ["no_proxy"] = "localhost,127.0.0.1,::1"
+demo.queue().launch(inbrowser=True, server_name='localhost')

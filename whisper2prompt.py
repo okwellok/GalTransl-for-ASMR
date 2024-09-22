@@ -71,7 +71,7 @@ def execute_asr(input_file, output_folder, model_size, language,precision):
             audio          = file,
             beam_size      = 5,
             vad_filter     = True,
-            vad_parameters = dict(min_silence_duration_ms=700),
+            vad_parameters = dict(threshold=0.15,min_silence_duration_ms=700),
             language       = language)
         for segment in segments:
             output.append(dict(name="Name",start=segment.start, end=segment.end,message=segment.text))
